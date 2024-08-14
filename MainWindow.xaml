@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="VXInstaller.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:VXInstaller"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop Kind="Base"/>
+    </Window.SystemBackdrop>
+
+    <!-- Root Grid for the entire window -->
+    <Grid>
+        <!-- Define rows: one for the title bar and one for the main content -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <!-- Height of the title bar -->
+            <RowDefinition Height="*"/>
+            <!-- Fill remaining space -->
+        </Grid.RowDefinitions>
+
+        <!-- Title Bar Background -->
+
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent">
+            <!-- Width of the padding columns is set in LayoutMetricsChanged handler. -->
+            <!-- Using padding columns instead of Margin ensures that the background
+         paints the area under the caption control buttons (for transparent buttons). -->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftPaddingColumn" Width="0"/>
+                <ColumnDefinition/>
+                <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
+            <Image 
+                Source="Assets/Square44x44Logo.png" 
+                Grid.Column="1"
+                HorizontalAlignment="Left"
+                Width="16" Height="16"
+                Margin="8,0,0,0"/>
+            <TextBlock x:Name="AppTitleTextBlock"
+                Text="App title" 
+                Style="{StaticResource CaptionTextBlockStyle}" 
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Margin="28,0,0,0"/>
+        </Grid>
+        
+        <!-- Main Content -->
+        <Grid Margin="0,0,0,0" Grid.Row="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

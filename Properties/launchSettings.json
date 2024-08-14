@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "VXInstaller (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "VXInstaller (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
