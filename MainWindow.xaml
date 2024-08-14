@@ -40,7 +40,7 @@
                 Width="16" Height="16"
                 Margin="8,0,0,0"/>
             <TextBlock x:Name="AppTitleTextBlock"
-                Text="App title" 
+                Text="VX Installer" 
                 Style="{StaticResource CaptionTextBlockStyle}" 
                 Grid.Column="1"
                 VerticalAlignment="Center"
@@ -48,10 +48,10 @@
         </Grid>
         
         <!-- Main Content -->
-        <Grid Margin="0,0,0,0" Grid.Row="1">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-            </StackPanel>
-        </Grid>
+        <!-- <Grid Margin="0,0,0,0" Grid.Row="1"> -->
+        <!--     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"> -->
+        <!--         ~1~ <Button x:Name="myButton" Click="myButton_Click">Click Me</Button> @1@ -->
+        <!--     </StackPanel> -->
+        <!-- </Grid> -->
     </Grid>
 </Window>
