@@ -143,7 +143,7 @@
 
                                 <!-- ReleasePage -->
                                 <Grid x:Name="InfoPage" Visibility="Collapsed">
-                                    <TextBlock Text="Installing / Uninstalling totally" />
+                                    <TextBlock x:Name="InstallingText" Text="Installing / Uninstalling totally" />
                                 </Grid>
 
                                 <!-- Define Visual States -->

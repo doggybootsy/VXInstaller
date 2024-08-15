@@ -2,30 +2,20 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using WinRT.Interop;
 using Microsoft.UI.Windowing;
-using Windows.UI.ViewManagement;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Core;
-using WinRT;
 using System.Text.RegularExpressions;
-using Microsoft.UI.Xaml.Shapes;
+using System.Threading.Tasks;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Newtonsoft.Json.Linq;
 using static VXInstaller.Discord;
-using Windows.Devices.Input;
 
 namespace VXInstaller
 {
@@ -33,8 +23,8 @@ namespace VXInstaller
     {
         public DiscordReleaseButton(Release release)
         {
-            ReleaseStruct path = GetDiscordPath(release);
-
+            var path = GetDiscordPath(release);
+ 
             Release = release;
 
             Button = new()
@@ -42,9 +32,12 @@ namespace VXInstaller
                 IsEnabled = path is not null,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Tag = path?.Resources
             };
 
+            ReleaseStuff = path;
+            
             Grid grid = new();
 
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Fixed width for the Image
@@ -53,7 +46,7 @@ namespace VXInstaller
 
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-            int ImageSize = 60;
+            var ImageSize = 60;
 
             // Create the Image
             Image = new()
@@ -89,6 +82,7 @@ namespace VXInstaller
         public readonly ToggleButton Button;
         public readonly Image Image;
         public readonly TextBlock TextBlock;
+        public ReleaseStruct ReleaseStuff;
 
         private string ReleaseText
         {
@@ -102,34 +96,37 @@ namespace VXInstaller
     }
     public class BackdropProvider
     {
-        static public bool IsMicaSupported()
+        private static bool IsMicaSupported()
         {
             return MicaController.IsSupported();
         }
-        static public bool IsAcrylicSupported()
+
+        private static bool IsAcrylicSupported()
         {
             return DesktopAcrylicController.IsSupported();
         }
-        static public bool IsSupported()
+        public static bool IsSupported()
         {
             return IsMicaSupported() || IsAcrylicSupported();
         }
-        static public SystemBackdrop GetBackdrop()
+        public static SystemBackdrop GetBackdrop()
         {
             if (IsMicaSupported())
             {
-                MicaBackdrop backdrop = new();
-                backdrop.Kind = MicaKind.Base;
+                MicaBackdrop backdrop = new()
+                {
+                    Kind = MicaKind.Base
+                };
                 return backdrop;
             }
-            if (IsAcrylicSupported())
+
+            if (!IsAcrylicSupported()) return null;
             {
                 DesktopAcrylicBackdrop backdrop = new();
 
                 return backdrop;
             }
 
-            return null;
         }
     }
     public class Discord
@@ -147,7 +144,7 @@ namespace VXInstaller
         }
         public static ReleaseStruct GetDiscordPath(Release release)
         {
-            string LocalAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var LocalAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             // Should not be possible but you never know
             if (string.IsNullOrEmpty(LocalAppData))
             {
@@ -171,7 +168,7 @@ namespace VXInstaller
                     return null;
             }
 
-            string DiscordBasePath = System.IO.Path.Combine(LocalAppData, DiscordFolderName);
+            var DiscordBasePath = System.IO.Path.Combine(LocalAppData, DiscordFolderName);
 
             try
             {
@@ -184,10 +181,10 @@ namespace VXInstaller
 
             string AppFolder = null;
 
-            string[] Directories = Directory.GetDirectories(DiscordBasePath);
-            foreach (string DirectoryPath in Directories)
+            var Directories = Directory.GetDirectories(DiscordBasePath);
+            foreach (var DirectoryPath in Directories)
             {
-                string DirectoryName = DirectoryPath.Replace(DiscordBasePath, "").Substring(1);
+                var DirectoryName = DirectoryPath.Replace(DiscordBasePath, "").Substring(1);
 
                 if (AppRegex.Match(DirectoryName).Success)
                 {
@@ -220,7 +217,7 @@ namespace VXInstaller
             public ReleaseStruct Canary { get; set; }
         }
 
-        static public ReleasesStruct GetAllDiscordPaths()
+        public static ReleasesStruct GetAllDiscordPaths()
         {
             ReleasesStruct structure = new()
             {
@@ -235,14 +232,16 @@ namespace VXInstaller
 
     public sealed partial class MainWindow : Window
     {
-
+        
+        private DiscordReleaseButton SelectedReleaseButton;
+        
         public MainWindow()
         {
             this.InitializeComponent();
 
-            IntPtr hWnd = WindowNative.GetWindowHandle(this);
-            WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
-            AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
+            var hWnd = WindowNative.GetWindowHandle(this);
+            var windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
+            var appWindow = AppWindow.GetFromWindowId(windowId);
 
             // Set the window size to 800x600
             appWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 600, Height = 400 });
@@ -273,11 +272,11 @@ namespace VXInstaller
             DiscordReleaseButton ptb = new(Release.PTB);
             DiscordReleaseButton canary = new(Release.CANARY);
 
-            Releases = [ stable, ptb, canary ];
+            Releases = new[] { stable, ptb, canary };
 
-            for (int i = 0; i < Releases.Length; i++)
+            for (var i = 0; i < Releases.Length; i++)
             {
-                DiscordReleaseButton release = Releases[i];
+                var release = Releases[i];
 
                 ReleasePage.Children.Add(release.Button);
 
@@ -290,6 +289,7 @@ namespace VXInstaller
                 };
             }
         }
+        
         private enum Page
         {
             RELEASES, ACTION, INFO
@@ -324,14 +324,7 @@ namespace VXInstaller
             switch (CurrentPage)
             {
                 case Page.RELEASES:
-                    foreach (var release in Releases)
-                    {
-                        if ((bool)release.Button.IsChecked)
-                        {
-                            return true;
-                        }
-                    }
-                    return false;
+                    return Releases.Any(release => release.Button.IsChecked != null && release.Button.IsChecked.GetValueOrDefault());
                 case Page.ACTION:
                     return true;
             }
@@ -387,7 +380,7 @@ namespace VXInstaller
 
         private void OnActivated(object sender, WindowActivatedEventArgs args)
         {
-            string ApplicationTitle = "VX Installer";
+            var ApplicationTitle = "VX Installer";
 
             AppTitleTextBlock.Text = ApplicationTitle;
 
@@ -396,8 +389,8 @@ namespace VXInstaller
 
         private AppWindow GetAppWindowForCurrentWindow()
         {
-            IntPtr hWnd = WindowNative.GetWindowHandle(this);
-            WindowId wndId = Win32Interop.GetWindowIdFromWindow(hWnd);
+            var hWnd = WindowNative.GetWindowHandle(this);
+            var wndId = Win32Interop.GetWindowIdFromWindow(hWnd);
             return AppWindow.GetFromWindowId(wndId);
         }
 
@@ -440,7 +433,7 @@ namespace VXInstaller
 
             if (!AppWindowTitleBar.IsCustomizationSupported()) return;
 
-            AppWindowTitleBar Titlebar = GetAppWindowForCurrentWindow().TitleBar;
+            var Titlebar = GetAppWindowForCurrentWindow().TitleBar;
 
             // Extend content into the title bar
             Titlebar.ExtendsContentIntoTitleBar = true;
@@ -451,5 +444,96 @@ namespace VXInstaller
 
             AppTitleBarRow.Height = new GridLength(Titlebar.Height);
         }
+         private async void InstallVX(string releasesPath)
+         {
+             RenameAppAsar(releasesPath);
+             await DownloadLatestAppAsar(releasesPath);
+         }
+
+         private static bool RenameAppAsar(string directoryPath)
+        {
+            if (string.IsNullOrEmpty(directoryPath) || !Directory.Exists(directoryPath))
+            {
+                throw new ArgumentException("Invalid directory path.");
+            }
+
+            var appAsarPath = Path.Combine(directoryPath, "app.asar");
+            var originalAppAsarPath = Path.Combine(directoryPath, "original.app.asar");
+
+            try
+            {
+                if (File.Exists(appAsarPath))
+                {
+                    File.Move(appAsarPath, originalAppAsarPath);
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("File 'app.asar' not found. Is Discord installed correctly?");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error renaming file: {ex.Message}");
+                return false;
+            }
+        }
+         
+        private async Task DownloadLatestAppAsar(string discordDir)
+        {
+            var downloadUrl = await GetLatestReleaseDownloadUrlAsync();
+            if (downloadUrl == null)
+            {
+                Console.WriteLine("Failed to get the download URL.");
+                return;
+            }
+
+            var downloadPath = Path.Combine(Path.GetTempPath(), "app.asar");
+
+            using (var httpClient = new HttpClient())
+            {
+                using (var response = await httpClient.GetAsync(downloadUrl))
+                {
+                    response.EnsureSuccessStatusCode();
+                    await using (var fileStream = new FileStream(downloadPath, FileMode.Create, FileAccess.Write))
+                    {
+                        await response.Content.CopyToAsync(fileStream);
+                    }
+                }
+            }
+
+            var targetPath = Path.Combine(discordDir, "app.asar");
+            File.Move(downloadPath, targetPath);
+        }
+
+        private async Task<string> GetLatestReleaseDownloadUrlAsync()
+        {
+            const string apiUrl = "https://api.github.com/repos/doggybootsy/vx/releases/latest";
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+            using var response = await httpClient.GetAsync(apiUrl);
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Failed to fetch release data: {response.StatusCode}");
+                return null;
+            }
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var releaseData = JObject.Parse(jsonResponse);
+            var assets = releaseData["assets"] as JArray;
+
+            if (assets == null)
+            {
+                Console.WriteLine("No assets found in the release data.");
+                return null;
+            }
+
+            var asset = assets.FirstOrDefault(a =>
+                a["name"].ToString().Equals("app.asar", StringComparison.OrdinalIgnoreCase));
+            return asset?["browser_download_url"]?.ToString();
+        }
+        
     }
 }
