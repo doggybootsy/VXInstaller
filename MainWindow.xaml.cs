@@ -26,6 +26,11 @@ using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml.Media.Imaging;
 using static VXInstaller.Discord;
 using Windows.Devices.Input;
+using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.Controls;
+using Microsoft.UI.Xaml.Automation;
+using Windows.UI.ApplicationSettings;
+using System.Threading.Tasks;
 
 namespace VXInstaller
 {
@@ -136,8 +141,7 @@ namespace VXInstaller
     {
         public Discord() { }
 
-        private static Regex AppRegex = new Regex(@"^app-\d+\.\d+.\d+$");
-        private static Regex DesktopCoreRegex = new Regex(@"^discord_desktop_core-\d+$");
+        private static readonly Regex AppRegex = new(@"^app-\d+\.\d+.\d+$");
 
         public enum Release
         {
@@ -232,7 +236,6 @@ namespace VXInstaller
             return structure;
         }
     }
-
     public sealed partial class MainWindow : Window
     {
 
@@ -259,11 +262,25 @@ namespace VXInstaller
                 SystemBackdrop = BackdropProvider.GetBackdrop();
             }
 
-            this.Activated += OnActivated;
-
             AddReleaseButtons();
             SetUpNavigationalButtons();
             SetUpActionButtons();
+            HandleUserSetting();
+
+            AppTitle = "VX Installer";
+        }
+
+        public string AppTitle
+        {
+            get
+            {
+                return Title;
+            }
+            set
+            {
+                AppTitleTextBlock.Text = value;
+                Title = value;
+            }
         }
 
         private DiscordReleaseButton[] Releases;
@@ -384,14 +401,40 @@ namespace VXInstaller
         {
             VisualStateManager.GoToState(SettingsContainerControl, "Settings", true);
         }
-
-        private void OnActivated(object sender, WindowActivatedEventArgs args)
+        private void CloseSettings(object sender, RoutedEventArgs e)
         {
-            string ApplicationTitle = "VX Installer";
+            VisualStateManager.GoToState(SettingsContainerControl, "MainApp", true);
+        }
+        private void HandleUserSetting()
+        {
+            ComboBox UserAccount = (ComboBox)SettingPage.FindName("UserAccount");
 
-            AppTitleTextBlock.Text = ApplicationTitle;
+            if (UserAccount is null) return;
 
-            Title = ApplicationTitle;
+            string SystemDrive = Environment.GetEnvironmentVariable("SystemDrive")!;
+            string USERNAME = Environment.GetEnvironmentVariable("USERNAME")!;
+
+            string[] AllUsers = Directory.GetDirectories(System.IO.Path.Combine(SystemDrive, "Users"));
+
+            foreach (string User in AllUsers)
+            {
+                string AppData = System.IO.Path.Combine(User, "AppData");
+
+                if (!Directory.Exists(AppData)) continue;
+
+                string UserName = User.Replace(System.IO.Path.GetDirectoryName(User), "").Substring(1);
+
+                UserAccount.Items.Add(UserName);
+                if (USERNAME == UserName) UserAccount.SelectedItem = UserName;
+            };
+        }
+        public async void OpenDiscord(object sender, RoutedEventArgs e)
+        {
+            await Windows.System.Launcher.LaunchUriAsync(new Uri("http://fakeurl.tld"));
+        }
+        public async void OpenGithub(object sender, RoutedEventArgs e)
+        {
+            await Windows.System.Launcher.LaunchUriAsync(new Uri("http://fakeurl.tld"));
         }
 
         private AppWindow GetAppWindowForCurrentWindow()
@@ -451,5 +494,6 @@ namespace VXInstaller
 
             AppTitleBarRow.Height = new GridLength(Titlebar.Height);
         }
+        public string WinAppSdkRuntimeDetails => $"WinUI 3";
     }
 }
