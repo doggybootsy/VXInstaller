@@ -721,9 +721,6 @@ require(`./${latest}.asar`);";
             if (!File.Exists(vxAppIndex)) File.WriteAllText(vxAppIndex, IndexJsScript);
         }
 
-        public readonly string IndexJSContent = $"require('{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).Replace("\\", "/")}/.vx/app');\nrequire('../vx.app.asar');";
-        public readonly string PackageJSONContent = @"{""main"": ""index.js""}";
-
         private async void Install(ReleaseStruct release)
         {
             BackButton.Content = "Restart";
@@ -759,8 +756,23 @@ require(`./${latest}.asar`);";
 
             Directory.CreateDirectory(appDirectory);
 
-            File.WriteAllText(Path.Combine(appDirectory, "index.js"), IndexJSContent);
-            File.WriteAllText(Path.Combine(appDirectory, "package.json"), PackageJSONContent);
+            // Allow $VX_REQUIRE to be set so you can have a local version
+            // For vx development
+            // If its empty / null use %APPDATA%\.vx\app
+            string app = Environment.GetEnvironmentVariable("VX_INJECTION_PATH");
+
+            if (string.IsNullOrEmpty(app))
+            {
+                app = @$"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\.vx\app";
+            }
+
+            string index = $"require('{app.Replace("\\", "/")}');\nrequire('../vx.app.asar');";
+
+
+            string package = @"{""main"": ""index.js""}";
+
+            File.WriteAllText(Path.Combine(appDirectory, "index.js"), index);
+            File.WriteAllText(Path.Combine(appDirectory, "package.json"), package);
 
             AddLog("VX is injected");
             if (wasDiscordOpen) OpenDiscord(release);

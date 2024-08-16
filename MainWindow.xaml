@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition x:Name="AppTitleBarRow" Height="0"/>
@@ -55,7 +55,8 @@
                         <UserControl x:Name="PageContainerControl">
                             <Grid x:Name="PageContainer">
                                 <!-- Release Page -->
-                                <!-- Uses rows instead
+                                
+                                <!-- Uses rows instead-->
                                 <Grid x:Name="ReleasePage">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -119,8 +120,8 @@
                                         </Grid>
                                     </ToggleButton>
                                 </Grid>
-                                -->
-                                
+
+                                <!-- Uses columns instead
                                 <Grid x:Name="ReleasePage">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -136,8 +137,7 @@
                                     <ToggleButton Grid.Column="0" x:Name="StableReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center">
                                         <Grid>
                                             <Grid.RowDefinitions>
-                                                <RowDefinition Height="auto"/>
-                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="*"/>
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
 
@@ -184,6 +184,7 @@
                                         </Grid>
                                     </ToggleButton>
                                 </Grid>
+                                -->
 
                                 <!-- ActionPage -->
                                 <Grid x:Name="ActionPage" Visibility="Collapsed">
