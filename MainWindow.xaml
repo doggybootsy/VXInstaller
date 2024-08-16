@@ -66,6 +66,48 @@
                                         <RowDefinition Height="8"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
+
+                                    <ToggleButton Grid.Row="0" x:Name="StableReleaseButton" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Image Source="Assets/Square44x44Logo.png" HorizontalAlignment="Left" Width="60" Height="60" Grid.Column="0" />
+
+                                            <TextBlock Text="Stable" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Row="2" x:Name="PTBReleaseButton" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Image Source="Assets/Square44x44Logo.png" HorizontalAlignment="Left" Width="60" Height="60" Grid.Column="0" />
+
+                                            <TextBlock Text="Public Test Branch" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Row="4" x:Name="CanaryReleaseButton" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Image Source="Assets/Square44x44Logo.png" HorizontalAlignment="Left" Width="60" Height="60" Grid.Column="0" />
+
+                                            <TextBlock Text="Canary" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
+                                        </Grid>
+                                    </ToggleButton>
                                 </Grid>
 
                                 <!-- ActionPage -->

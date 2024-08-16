@@ -94,12 +94,16 @@ namespace VXInstaller
                 SystemBackdrop = BackdropProvider.GetBackdrop();
             }
 
-            AddReleaseButtons();
             SetUpNavigationalButtons();
             SetUpActionButtons();
             HandleUserSetting();
 
             AppTitle = "VX Installer";
+
+
+            StableReleaseButton.IsEnabled = GetDiscordRelease(Release.STABLE) is not null;
+            PTBReleaseButton.IsEnabled = GetDiscordRelease(Release.PTB) is not null;
+            CanaryReleaseButton.IsEnabled = GetDiscordRelease(Release.CANARY) is not null;
         }
 
         public string AppTitle
@@ -114,30 +118,9 @@ namespace VXInstaller
                 Title = value;
             }
         }
-
-        private DiscordReleaseButton[] Releases;
-        private void AddReleaseButtons()
+        private void ReleaseButtonClick(object s, RoutedEvent e)
         {
-            DiscordReleaseButton stable = new(Release.STABLE);
-            DiscordReleaseButton ptb = new(Release.PTB);
-            DiscordReleaseButton canary = new(Release.CANARY);
-
-            Releases = [ stable, ptb, canary ];
-
-            for (int i = 0; i < Releases.Length; i++)
-            {
-                DiscordReleaseButton release = Releases[i];
-
-                ReleasePage.Children.Add(release.Button);
-
-                Grid.SetRow(release.Button, i * 2);
-                Grid.SetColumn(release.Button, 0);
-
-                release.Button.Click += (o, e) =>
-                {
-                    CheckNavigationalButtonsState();
-                };
-            }
+            CheckNavigationalButtonsState();
         }
         private enum Page
         {
@@ -173,13 +156,7 @@ namespace VXInstaller
             switch (CurrentPage)
             {
                 case Page.RELEASES:
-                    foreach (var release in Releases)
-                    {
-                        if ((bool)release.Button.IsChecked)
-                        {
-                            return true;
-                        }
-                    }
+                    if (StableReleaseButton.IsEnabled || PTBReleaseButton.IsEnabled || CanaryReleaseButton.IsEnabled) return true;
                     return false;
                 case Page.ACTION:
                     return true;
@@ -265,14 +242,17 @@ namespace VXInstaller
 
             UserAccount.SelectionChanged += UserAccount_SelectionChanged;
         }
-
+        
         private void UserAccount_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            foreach (DiscordReleaseButton button in Releases)
-            {
-                button.Button.IsEnabled = GetDiscordRelease(button.Release) is not null;
-                button.Button.IsChecked = false;
-            }
+            StableReleaseButton.IsEnabled = GetDiscordRelease(Release.STABLE) is not null;
+            StableReleaseButton.IsChecked = false;
+
+            PTBReleaseButton.IsEnabled = GetDiscordRelease(Release.PTB) is not null;
+            PTBReleaseButton.IsChecked = false;
+
+            CanaryReleaseButton.IsEnabled = GetDiscordRelease(Release.CANARY) is not null;
+            CanaryReleaseButton.IsChecked = false;
         }
 
         // Due to the setting that allows changing of the user
@@ -362,10 +342,10 @@ namespace VXInstaller
             PTB,
             CANARY
         }
-        public static ReleaseStruct GetDiscordRelease(Release release)
+        public ReleaseStruct GetDiscordRelease(Release release)
         {
 
-            string LocalAppData = CurrentWindow.GetApplicationData(true);
+            string LocalAppData = GetApplicationData(true);
             // Should not be possible but you never know
             if (string.IsNullOrEmpty(LocalAppData))
             {
@@ -430,84 +410,6 @@ namespace VXInstaller
         {
             public string Resources { get; set; }
             public Release Release { get; set; }
-        }
-        public class ReleasesStruct
-        {
-            public ReleaseStruct Stable { get; set; }
-            public ReleaseStruct PTB { get; set; }
-            public ReleaseStruct Canary { get; set; }
-        }
-
-        public class DiscordReleaseButton
-        {
-            public DiscordReleaseButton(Release release)
-            {
-                ReleaseStruct path = GetDiscordRelease(release);
-
-                Release = release;
-
-                Button = new()
-                {
-                    IsEnabled = path is not null,
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Stretch,
-                    HorizontalContentAlignment = HorizontalAlignment.Left
-                };
-
-                Grid grid = new();
-
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Fixed width for the Image
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(8) });  // Small space between Image and TextBlock
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // TextBlock stretches in this column
-
-                grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-
-                int ImageSize = 60;
-
-                // Create the Image
-                Image = new()
-                {
-                    Source = new BitmapImage(new Uri("ms-appx:///Assets/Square44x44Logo.png")),
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    Width = ImageSize,
-                    Height = ImageSize
-                };
-                Grid.SetColumn(Image, 0);
-                Grid.SetRow(Image, 0);
-
-                // Create the TextBlock
-                TextBlock = new()
-                {
-                    Text = ReleaseText,
-                    Style = (Style)Application.Current.Resources["SubtitleTextBlockStyle"],
-                    VerticalAlignment = VerticalAlignment.Center,
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    TextWrapping = TextWrapping.Wrap
-                };
-                Grid.SetColumn(TextBlock, 2);
-                Grid.SetRow(TextBlock, 0);
-
-                // Add the Image and TextBlock to the Grid
-                grid.Children.Add(Image);
-                grid.Children.Add(TextBlock);
-
-                Button.Content = grid;
-            }
-
-            public readonly Release Release;
-            public readonly ToggleButton Button;
-            public readonly Image Image;
-            public readonly TextBlock TextBlock;
-
-            private string ReleaseText
-            {
-                get
-                {
-                    if (Release is Release.PTB) return "Public Test Branch";
-                    if (Release is Release.CANARY) return "Canary";
-                    return "Stable";
-                }
-            }
         }
     }
 }
