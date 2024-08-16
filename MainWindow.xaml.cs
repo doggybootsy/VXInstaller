@@ -21,7 +21,6 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Core;
 using WinRT;
 using System.Text.RegularExpressions;
-using Microsoft.UI.Xaml.Shapes;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Devices.Input;
@@ -30,6 +29,96 @@ using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml.Automation;
 using Windows.UI.ApplicationSettings;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Net.Http;
+using System.Net.Http.Json;
+using ABI.System;
+
+namespace Github
+{
+    public class Asset
+    {
+        public string url { get; set; }
+        public int id { get; set; }
+        public string node_id { get; set; }
+        public string name { get; set; }
+        public object label { get; set; }
+        public Uploader uploader { get; set; }
+        public string content_type { get; set; }
+        public string state { get; set; }
+        public int size { get; set; }
+        public int download_count { get; set; }
+        public DateTime created_at { get; set; }
+        public DateTime updated_at { get; set; }
+        public string browser_download_url { get; set; }
+    }
+
+    public class Author
+    {
+        public string login { get; set; }
+        public int id { get; set; }
+        public string node_id { get; set; }
+        public string avatar_url { get; set; }
+        public string gravatar_id { get; set; }
+        public string url { get; set; }
+        public string html_url { get; set; }
+        public string followers_url { get; set; }
+        public string following_url { get; set; }
+        public string gists_url { get; set; }
+        public string starred_url { get; set; }
+        public string subscriptions_url { get; set; }
+        public string organizations_url { get; set; }
+        public string repos_url { get; set; }
+        public string events_url { get; set; }
+        public string received_events_url { get; set; }
+        public string type { get; set; }
+        public bool site_admin { get; set; }
+    }
+
+    public class Release
+    {
+        public string url { get; set; }
+        public string assets_url { get; set; }
+        public string upload_url { get; set; }
+        public string html_url { get; set; }
+        public int id { get; set; }
+        public Author author { get; set; }
+        public string node_id { get; set; }
+        public string tag_name { get; set; }
+        public string target_commitish { get; set; }
+        public string name { get; set; }
+        public bool draft { get; set; }
+        public bool prerelease { get; set; }
+        public DateTime created_at { get; set; }
+        public DateTime published_at { get; set; }
+        public List<Asset> assets { get; set; }
+        public string tarball_url { get; set; }
+        public string zipball_url { get; set; }
+        public string body { get; set; }
+    }
+
+    public class Uploader
+    {
+        public string login { get; set; }
+        public int id { get; set; }
+        public string node_id { get; set; }
+        public string avatar_url { get; set; }
+        public string gravatar_id { get; set; }
+        public string url { get; set; }
+        public string html_url { get; set; }
+        public string followers_url { get; set; }
+        public string following_url { get; set; }
+        public string gists_url { get; set; }
+        public string starred_url { get; set; }
+        public string subscriptions_url { get; set; }
+        public string organizations_url { get; set; }
+        public string repos_url { get; set; }
+        public string events_url { get; set; }
+        public string received_events_url { get; set; }
+        public string type { get; set; }
+        public bool site_admin { get; set; }
+    }
+}
 
 namespace VXInstaller
 {
@@ -51,8 +140,10 @@ namespace VXInstaller
         {
             if (IsMicaSupported())
             {
-                MicaBackdrop backdrop = new();
-                backdrop.Kind = MicaKind.Base;
+                MicaBackdrop backdrop = new()
+                {
+                    Kind = MicaKind.Base
+                };
                 return backdrop;
             }
             if (IsAcrylicSupported())
@@ -67,12 +158,8 @@ namespace VXInstaller
     }
     public sealed partial class MainWindow : Window
     {
-        public static MainWindow CurrentWindow = null;
-
         public MainWindow()
         {
-            CurrentWindow = this;
-
             this.InitializeComponent();
 
             IntPtr hWnd = WindowNative.GetWindowHandle(this);
@@ -134,10 +221,29 @@ namespace VXInstaller
                 case Page.RELEASES:
                     VisualStateManager.GoToState(PageContainerControl, "ActionPageState", true);
                     CurrentPage = Page.ACTION;
+                    UserAccount.IsEnabled = false;
                     break;
                 case Page.ACTION:
                     VisualStateManager.GoToState(PageContainerControl, "InfoPageState", true);
                     CurrentPage = Page.INFO;
+
+                    if (InstallButton.IsChecked is true)
+                    {
+                        if (StableReleaseButton.IsChecked is true) Install(GetDiscordRelease(Release.STABLE));
+                        if (PTBReleaseButton.IsChecked is true) Install(GetDiscordRelease(Release.PTB));
+                        if (CanaryReleaseButton.IsChecked is true) Install(GetDiscordRelease(Release.CANARY));
+                    }
+                    else
+                    {
+                        if (StableReleaseButton.IsChecked is true) Uninstall(GetDiscordRelease(Release.STABLE));
+                        if (PTBReleaseButton.IsChecked is true) Uninstall(GetDiscordRelease(Release.PTB));
+                        if (CanaryReleaseButton.IsChecked is true) Uninstall(GetDiscordRelease(Release.CANARY));
+                    }
+
+                    break;
+                case Page.INFO:
+                    Close();
+
                     break;
             }
         }
@@ -148,30 +254,37 @@ namespace VXInstaller
                 case Page.ACTION:
                     VisualStateManager.GoToState(PageContainerControl, "ReleasePageState", true);
                     CurrentPage = Page.RELEASES;
+                    UserAccount.IsEnabled = true;
                     break;
             }
         }
-        private bool CanGoNextPage()
+        private void CheckNextButtonState()
         {
             switch (CurrentPage)
             {
                 case Page.RELEASES:
-                    if (StableReleaseButton.IsEnabled || PTBReleaseButton.IsEnabled || CanaryReleaseButton.IsEnabled) return true;
-                    return false;
-                case Page.ACTION:
-                    return true;
-            }
+                    if (StableReleaseButton.IsChecked is true) NextButton.IsEnabled = true;
+                    else if (PTBReleaseButton.IsChecked is true) NextButton.IsEnabled = true;
+                    else if (CanaryReleaseButton.IsChecked is true) NextButton.IsEnabled = true;
+                    else NextButton.IsEnabled = false;
 
-            return false;
+                    break;
+                case Page.ACTION:
+                    NextButton.IsEnabled = true;
+                    break;
+                default:
+                    NextButton.IsEnabled = false;
+                    break;
+            }
         }
-        private bool CanGoBackPage()
+        private void CheckBackButtonState()
         {
-            return CurrentPage is Page.ACTION;
+            BackButton.IsEnabled = CurrentPage is Page.ACTION;
         }
         private void CheckNavigationalButtonsState()
         {
-            NextButton.IsEnabled = CanGoNextPage();
-            BackButton.IsEnabled = CanGoBackPage();
+            CheckNextButtonState();
+            CheckBackButtonState();
         }
         private void SetUpNavigationalButtons()
         {
@@ -187,6 +300,11 @@ namespace VXInstaller
                 GoBackPage();
                 CheckNavigationalButtonsState();
             };
+        }
+
+        private void ClickCheckNavigationalButtonsState(object sender, RoutedEventArgs e)
+        {
+            CheckNavigationalButtonsState();
         }
 
         // Actions buttons
@@ -218,23 +336,19 @@ namespace VXInstaller
         }
         private void HandleUserSetting()
         {
-            ComboBox UserAccount = (ComboBox)SettingPage.FindName("UserAccount");
-
-            if (UserAccount is null) return;
-
             string SystemDrive = Environment.GetEnvironmentVariable("SystemDrive")!;
             string USERNAME = Environment.GetEnvironmentVariable("USERNAME")!;
 
-            string[] AllUsers = Directory.GetDirectories(System.IO.Path.Combine(SystemDrive, "Users"));
+            string[] AllUsers = Directory.GetDirectories(Path.Combine(SystemDrive, "Users"));
 
             foreach (string User in AllUsers)
             {
-                string AppData = System.IO.Path.Combine(User, "AppData");
+                string AppData = Path.Combine(User, "AppData");
 
                 if (!Directory.Exists(AppData)) continue;
 
-                // string UserName = User.Replace(System.IO.Path.GetDirectoryName(User), "").Substring(1);
-                string UserName = System.IO.Path.GetFileName(User);
+                // string UserName = User.Replace(Path.GetDirectoryName(User), "").Substring(1);
+                string UserName = Path.GetFileName(User);
 
                 UserAccount.Items.Add(UserName);
                 if (USERNAME == UserName) UserAccount.SelectedItem = UserName;
@@ -242,7 +356,7 @@ namespace VXInstaller
 
             UserAccount.SelectionChanged += UserAccount_SelectionChanged;
         }
-        
+
         private void UserAccount_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             StableReleaseButton.IsEnabled = GetDiscordRelease(Release.STABLE) is not null;
@@ -259,17 +373,13 @@ namespace VXInstaller
         // This will get the respective user
         private string GetApplicationData(bool LocalAppData = false)
         {
-            ComboBox UserAccount = (ComboBox)SettingPage.FindName("UserAccount");
-            // Not possible but
-            if (UserAccount is null || UserAccount.SelectedItem is null) return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (UserAccount.SelectedItem is null) return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
             string SystemDrive = Environment.GetEnvironmentVariable("SystemDrive")!;
 
             string AppDataType = LocalAppData ? "Local" : "Roaming";
 
-            
-
-            return System.IO.Path.Combine(SystemDrive, "Users", UserAccount.SelectedItem.ToString(), "AppData", AppDataType);
+            return Path.Combine(SystemDrive, "Users", UserAccount.SelectedItem.ToString(), "AppData", AppDataType);
         }
 
         private AppWindow GetAppWindowForCurrentWindow()
@@ -323,7 +433,7 @@ namespace VXInstaller
             AppWindowTitleBar Titlebar = GetAppWindowForCurrentWindow().TitleBar;
 
             // Extend content into the title bar
-            Titlebar.ExtendsContentIntoTitleBar = true;
+            ExtendsContentIntoTitleBar = true;
             Titlebar.ButtonBackgroundColor = Colors.Transparent;
             Titlebar.ButtonInactiveBackgroundColor = Colors.Transparent;
 
@@ -331,10 +441,17 @@ namespace VXInstaller
 
             AppTitleBarRow.Height = new GridLength(Titlebar.Height);
         }
-        public string WinAppSdkRuntimeDetails => $"WinUI 3";
+        // Setting stuff
+        // TODO: Show Win App SDK Stuff
+        public string WinAppSdkRuntimeDetails => $"Windows App SDK";
+        private void CreateIssue(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo { FileName = "https://github.com/doggybootsy/VXInstaller/issues/new", UseShellExecute = true });
+        }
 
         // Discord
-        private static readonly Regex AppRegex = new(@"^app-\d+\.\d+.\d+$");
+        [GeneratedRegex(@"^app-\d+\.\d+.\d+$")]
+        private static partial Regex AppRegex();
 
         public enum Release
         {
@@ -369,7 +486,7 @@ namespace VXInstaller
                     return null;
             }
 
-            string DiscordBasePath = System.IO.Path.Combine(LocalAppData, DiscordFolderName);
+            string DiscordBasePath = Path.Combine(LocalAppData, DiscordFolderName);
 
             try
             {
@@ -387,7 +504,7 @@ namespace VXInstaller
             {
                 string DirectoryName = DirectoryPath.Replace(DiscordBasePath, "").Substring(1);
 
-                if (AppRegex.Match(DirectoryName).Success)
+                if (AppRegex().Match(DirectoryName).Success)
                 {
                     AppFolder = DirectoryPath;
                 }
@@ -398,9 +515,14 @@ namespace VXInstaller
                 return null;
             }
 
+            string exe = "Discord.exe";
+            if (release is Release.PTB) exe = "DiscordPTB.exe";
+            else if (release is Release.CANARY) exe = "DiscordCanary.exe";
+
             ReleaseStruct releaseStruct = new()
             {
-                Resources = System.IO.Path.Combine(AppFolder, "resources"),
+                Resources = Path.Combine(AppFolder, "resources"),
+                ExeLocation = Path.Combine(AppFolder, exe),
                 Release = release
             };
 
@@ -409,7 +531,251 @@ namespace VXInstaller
         public class ReleaseStruct
         {
             public string Resources { get; set; }
+            public string ExeLocation { get; set; }
             public Release Release { get; set; }
+        }
+
+        private async Task<bool> CloseDiscord(ReleaseStruct release)
+        {
+            bool didClose = false;
+            bool hasLogged = false;
+
+            Process[] processes = Process.GetProcesses();
+
+            foreach (Process process in processes)
+            {
+                try
+                {
+                    if (process.MainModule == null) continue;
+
+                    if (process.MainModule.FileName.Equals(release.ExeLocation, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!process.HasExited)
+                        {
+                            if (!hasLogged)
+                            {
+                                hasLogged = true;
+                                AddLog("Closing Discord");
+                            }
+
+                            // Attempt to close gracefully first (if applicable)
+                            process.CloseMainWindow();
+                            // Wait a little
+                            await Task.Delay(10);
+
+                            if (!process.HasExited)
+                            {
+                                process.Kill();
+                            }
+
+                            didClose = true;
+                        }
+
+                        await process.WaitForExitAsync();
+                    }
+                }
+                
+                catch (System.ComponentModel.Win32Exception) { }
+                catch (InvalidOperationException) { }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
+
+            return didClose;
+        }
+        private void OpenDiscord(ReleaseStruct release)
+        {
+            AddLog("Opening Discord");
+
+            ProcessStartInfo startInfo = new()
+            {
+                FileName = release.ExeLocation, // The executable you want to start
+                UseShellExecute = true   // Use the operating system shell to start the process
+            };
+
+            Process.Start(startInfo);
+        }
+
+        private void AddLog(string log)
+        {
+            TextBlock textBlock = new()
+            {
+                Text = log
+            };
+
+            InfoLog.Children.Add(textBlock);
+        }
+
+        // Installing
+        public readonly string IndexJsScript = @"// VX Index.js v1.0.0
+const fs = require('node:fs');
+const path = require('node:path');
+
+const asars = fs.readdirSync(__dirname)
+  .filter((file) => file.endsWith('.asar'))
+  .map((file) => file.replace('.asar', ''))
+  .filter((file) => /^(\d+)\.(\d+)\.(\d+)/.test(file));
+
+const [ latest, ...old ] = asars.sort((a, b) => -a.localeCompare(b));
+
+for (const version of old) {
+  try { fs.unlinkSync(path.join(__dirname, `${version}.asar`)); }
+  catch (error) {
+    console.log('[vx]:', 'Unable to delete version', version);
+  }
+}
+
+require(`./${latest}.asar`);";
+
+        private string REPO_API_URL = "https://api.github.com/repos/doggybootsy/vx/releases/latest";
+
+        private async Task<bool> DownloadLatestAsar()
+        {
+            AddLog("Fetching Latest Release");
+
+            using HttpClient client = new();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("VX Installer");
+
+            using HttpResponseMessage response = await client.GetAsync(REPO_API_URL);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                AddLog($"Failed to fetch [status code {response.StatusCode}]");
+                return false;
+            }
+
+            Github.Release release = await response.Content.ReadFromJsonAsync<Github.Release>();
+
+            string version = release.tag_name;
+            if (version.StartsWith("v"))
+            {
+                version = version.Substring(1);
+            }
+
+            AddLog($"Latest version is v{version}");
+
+            string ApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string path = Path.Combine(ApplicationData, ".vx", "app", $"{version}.asar");
+
+            if (File.Exists(path))
+            {
+                AddLog("Latest version is installed");
+                return true;
+            }
+
+            AddLog("Fetching assets");
+
+            Github.Asset asar = null;
+
+            foreach (Github.Asset asset in release.assets)
+            {
+                if (asset.name.EndsWith(".asar"))
+                {
+                    asar = asset;
+                }
+            }
+
+            if (asar is null)
+            {
+                AddLog("Asset 'app.asar' not found!");
+                return false;
+            }
+
+            AddLog("Downloading latest asset");
+            using Stream stream = await client.GetStreamAsync(asar.browser_download_url);
+            using FileStream fs = new(path, FileMode.OpenOrCreate);
+
+            await stream.CopyToAsync(fs);
+            AddLog("Downloaded latest asset");
+
+            return true;
+        }
+
+        private void EnsureVXPath()
+        {
+            AddLog("Ensuring VX Directory");
+
+            string ApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string vxDirectory = Path.Combine(ApplicationData, ".vx");
+
+            if (!Directory.Exists(vxDirectory)) Directory.CreateDirectory(vxDirectory);
+
+            string vxAppDirectory = Path.Combine(vxDirectory, "app");
+            if (!Directory.Exists(vxAppDirectory)) Directory.CreateDirectory(vxAppDirectory);
+
+            string vxAppIndex = Path.Combine(vxAppDirectory, "index.js");
+            if (!File.Exists(vxAppIndex)) File.WriteAllText(vxAppIndex, IndexJsScript);
+        }
+
+        public readonly string IndexJSContent = $"require('{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).Replace("\\", "/")}/.vx/app');\nrequire('../vx.app.asar');";
+        public readonly string PackageJSONContent = @"{""main"": ""index.js""}";
+
+        private async void Install(ReleaseStruct release)
+        {
+            EnsureVXPath();
+
+            await DownloadLatestAsar();
+
+            bool wasDiscordOpen = await CloseDiscord(release);
+
+            AddLog($"Was Discord open {wasDiscordOpen}");
+
+            string appAsar = Path.Combine(release.Resources, "app.asar");
+            string originalAppAsar = Path.Combine(release.Resources, "vx.app.asar");
+
+            // If original exists then we just stop
+            if (File.Exists(originalAppAsar))
+            {
+                AddLog("VX is already injected");
+
+                if (wasDiscordOpen) OpenDiscord(release);
+                return;
+            }
+
+            Console.WriteLine($"{Process.GetProcessesByName("Discord").Length}");
+
+            AddLog("Injecting VX");
+
+            File.Move(appAsar, originalAppAsar);
+
+            string appDirectory = Path.Combine(release.Resources, "app");
+
+            Directory.CreateDirectory(appDirectory);
+
+            File.WriteAllText(Path.Combine(appDirectory, "index.js"), IndexJSContent);
+            File.WriteAllText(Path.Combine(appDirectory, "package.json"), PackageJSONContent);
+
+            AddLog("VX is injected");
+            if (wasDiscordOpen) OpenDiscord(release);
+
+            NextButton.IsEnabled = true;
+            NextButton.Content = "Exit";
+        }
+        private async void Uninstall(ReleaseStruct release)
+        {
+            bool wasDiscordOpen = await CloseDiscord(release);
+
+            string originalAppAsar = Path.Combine(release.Resources, "vx.app.asar");
+
+            // If original exists then we just stop
+            if (!File.Exists(originalAppAsar))
+            {
+                AddLog("VX is already uninjected");
+                if (wasDiscordOpen) OpenDiscord(release);
+                return;
+            }
+
+            File.Move(originalAppAsar, Path.Combine(release.Resources, "app.asar"));
+
+            Directory.Delete(Path.Combine(release.Resources, "app"), true);
+
+            AddLog("VX is uninjected");
+            if (wasDiscordOpen) OpenDiscord(release);
+
+            NextButton.IsEnabled = true;
+            NextButton.Content = "Exit";
         }
     }
 }

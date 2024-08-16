@@ -54,7 +54,7 @@
                     <Grid Grid.Row="0">
                         <UserControl x:Name="PageContainerControl">
                             <Grid x:Name="PageContainer">
-                                <!-- ReleasePage -->
+                                <!-- Release Page -->
                                 <Grid x:Name="ReleasePage">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -67,7 +67,7 @@
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
 
-                                    <ToggleButton Grid.Row="0" x:Name="StableReleaseButton" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                    <ToggleButton Grid.Row="0" x:Name="StableReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="auto"/>
@@ -75,13 +75,16 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <Image Source="Assets/Square44x44Logo.png" HorizontalAlignment="Left" Width="60" Height="60" Grid.Column="0" />
+                                            <Grid Grid.Column="0">
+                                                <Grid Background="#596aef" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
 
                                             <TextBlock Text="Stable" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
                                         </Grid>
                                     </ToggleButton>
 
-                                    <ToggleButton Grid.Row="2" x:Name="PTBReleaseButton" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                    <ToggleButton Grid.Row="2" x:Name="PTBReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="auto"/>
@@ -89,13 +92,16 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <Image Source="Assets/Square44x44Logo.png" HorizontalAlignment="Left" Width="60" Height="60" Grid.Column="0" />
+                                            <Grid Grid.Column="0">
+                                                <Grid Background="#5868f4" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
 
                                             <TextBlock Text="Public Test Branch" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
                                         </Grid>
                                     </ToggleButton>
 
-                                    <ToggleButton Grid.Row="4" x:Name="CanaryReleaseButton" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                    <ToggleButton Grid.Row="4" x:Name="CanaryReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="auto"/>
@@ -103,12 +109,81 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <Image Source="Assets/Square44x44Logo.png" HorizontalAlignment="Left" Width="60" Height="60" Grid.Column="0" />
+                                            <Grid Grid.Column="0">
+                                                <Grid Background="#f9b34b" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
 
                                             <TextBlock Text="Canary" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
                                         </Grid>
                                     </ToggleButton>
                                 </Grid>
+                                
+                                <!-- Uses columns instead
+                                <Grid x:Name="ReleasePage">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <ToggleButton Grid.Column="0" x:Name="StableReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Width="60">
+                                                <Grid Background="#596aef" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="Stable" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Column="2" x:Name="PTBReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Width="60">
+                                                <Grid Background="#5868f4" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="PTB" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Column="4" x:Name="CanaryReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Width="60">
+                                                <Grid Background="#f9b34b" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="Canary" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+                                </Grid>
+                                -->
 
                                 <!-- ActionPage -->
                                 <Grid x:Name="ActionPage" Visibility="Collapsed">
@@ -186,7 +261,11 @@
 
                                 <!-- ReleasePage -->
                                 <Grid x:Name="InfoPage" Visibility="Collapsed">
-                                    <TextBlock Text="Installing / Uninstalling totally" />
+                                    <ScrollView>
+                                        <StackPanel Orientation="Vertical" Spacing="8" x:Name="InfoLog">
+                                            
+                                        </StackPanel>
+                                    </ScrollView>
                                 </Grid>
 
                                 <!-- Define Visual States -->
@@ -342,11 +421,12 @@
                                 x:Name="AboutSecction">
                                 <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="1.0.0" />
                                 <controls:SettingsExpander.Items>
-                                    <controls:SettingsCard Header="File a bug or issue" IsClickEnabled="True">
+                                    <controls:SettingsCard Header="File a bug or issue" IsClickEnabled="True" Click="CreateIssue">
                                         <controls:SettingsCard.ActionIcon>
                                             <FontIcon Glyph="&#xE8A7;" />
                                         </controls:SettingsCard.ActionIcon>
                                     </controls:SettingsCard>
+
                                     <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical" Header="Dependencies">
                                         <StackPanel Margin="-12,0,0,0" Orientation="Vertical">
                                             <HyperlinkButton Content="{x:Bind WinAppSdkRuntimeDetails}" NavigateUri="https://aka.ms/windowsappsdk" />
