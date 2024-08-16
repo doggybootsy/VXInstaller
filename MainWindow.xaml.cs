@@ -24,7 +24,6 @@ using System.Text.RegularExpressions;
 using Microsoft.UI.Xaml.Shapes;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml.Media.Imaging;
-using static VXInstaller.Discord;
 using Windows.Devices.Input;
 using CommunityToolkit.WinUI;
 using CommunityToolkit.WinUI.Controls;
@@ -34,77 +33,6 @@ using System.Threading.Tasks;
 
 namespace VXInstaller
 {
-    public class DiscordReleaseButton
-    {
-        public DiscordReleaseButton(Release release)
-        {
-            ReleaseStruct path = GetDiscordPath(release);
-
-            Release = release;
-
-            Button = new()
-            {
-                IsEnabled = path is not null,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left
-            };
-
-            Grid grid = new();
-
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Fixed width for the Image
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(8) });  // Small space between Image and TextBlock
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // TextBlock stretches in this column
-
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-
-            int ImageSize = 60;
-
-            // Create the Image
-            Image = new()
-            {
-                Source = new BitmapImage(new Uri("ms-appx:///Assets/Square44x44Logo.png")),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Width = ImageSize,
-                Height = ImageSize
-            };
-            Grid.SetColumn(Image, 0);
-            Grid.SetRow(Image, 0);
-
-            // Create the TextBlock
-            TextBlock = new()
-            {
-                Text = ReleaseText,
-                Style = (Style)Application.Current.Resources["SubtitleTextBlockStyle"],
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                TextWrapping = TextWrapping.Wrap
-            };
-            Grid.SetColumn(TextBlock, 2);
-            Grid.SetRow(TextBlock, 0);
-
-            // Add the Image and TextBlock to the Grid
-            grid.Children.Add(Image);
-            grid.Children.Add(TextBlock);
-
-            Button.Content = grid;
-        }
-
-        public readonly Release Release;
-        public readonly ToggleButton Button;
-        public readonly Image Image;
-        public readonly TextBlock TextBlock;
-
-        private string ReleaseText
-        {
-            get
-            {
-                if (Release is Release.PTB) return "Public Test Branch";
-                if (Release is Release.CANARY) return "Canary";
-                return "Stable";
-            }
-        }
-    }
     public class BackdropProvider
     {
         static public bool IsMicaSupported()
@@ -137,110 +65,14 @@ namespace VXInstaller
             return null;
         }
     }
-    public class Discord
-    {
-        public Discord() { }
-
-        private static readonly Regex AppRegex = new(@"^app-\d+\.\d+.\d+$");
-
-        public enum Release
-        {
-            STABLE,
-            PTB,
-            CANARY
-        }
-        public static ReleaseStruct GetDiscordPath(Release release)
-        {
-            string LocalAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            // Should not be possible but you never know
-            if (string.IsNullOrEmpty(LocalAppData))
-            {
-                return null;
-            }
-
-            string DiscordFolderName;
-            switch (release)
-            {
-                case Release.STABLE:
-                    DiscordFolderName = "Discord";
-                    break;
-                case Release.PTB:
-                    DiscordFolderName = "DiscordPTB";
-                    break;
-                case Release.CANARY:
-                    DiscordFolderName = "DiscordCanary";
-                    break;
-
-                default:
-                    return null;
-            }
-
-            string DiscordBasePath = System.IO.Path.Combine(LocalAppData, DiscordFolderName);
-
-            try
-            {
-                if (!Directory.Exists(DiscordBasePath)) return null;
-            }
-            catch
-            {
-                return null;
-            }
-
-            string AppFolder = null;
-
-            string[] Directories = Directory.GetDirectories(DiscordBasePath);
-            foreach (string DirectoryPath in Directories)
-            {
-                string DirectoryName = DirectoryPath.Replace(DiscordBasePath, "").Substring(1);
-
-                if (AppRegex.Match(DirectoryName).Success)
-                {
-                    AppFolder = DirectoryPath;
-                }
-            }
-
-            if (string.IsNullOrEmpty(AppFolder))
-            {
-                return null;
-            }
-
-            ReleaseStruct releaseStruct = new()
-            {
-                Resources = System.IO.Path.Combine(AppFolder, "resources"),
-                Release = release
-            };
-
-            return releaseStruct;
-        }
-        public class ReleaseStruct
-        {
-            public string Resources { get; set; }
-            public Release Release { get; set; }
-        }
-        public class ReleasesStruct
-        {
-            public ReleaseStruct Stable { get; set; }
-            public ReleaseStruct PTB { get; set; }
-            public ReleaseStruct Canary { get; set; }
-        }
-
-        static public ReleasesStruct GetAllDiscordPaths()
-        {
-            ReleasesStruct structure = new()
-            {
-                Stable = GetDiscordPath(Release.STABLE),
-                PTB = GetDiscordPath(Release.PTB),
-                Canary = GetDiscordPath(Release.CANARY)
-            };
-
-            return structure;
-        }
-    }
     public sealed partial class MainWindow : Window
     {
+        public static MainWindow CurrentWindow = null;
 
         public MainWindow()
         {
+            CurrentWindow = this;
+
             this.InitializeComponent();
 
             IntPtr hWnd = WindowNative.GetWindowHandle(this);
@@ -380,6 +212,7 @@ namespace VXInstaller
             };
         }
 
+        // Actions buttons
         private void SetUpActionButtons()
         {
             InstallButton.Checked += InstallButtonStateChanged;
@@ -397,6 +230,7 @@ namespace VXInstaller
             InstallButton.IsChecked = !UninstallButton.IsChecked;
         }
 
+        // Settings
         private void OpenSettings(object sender, RoutedEventArgs e)
         {
             VisualStateManager.GoToState(SettingsContainerControl, "Settings", true);
@@ -422,19 +256,40 @@ namespace VXInstaller
 
                 if (!Directory.Exists(AppData)) continue;
 
-                string UserName = User.Replace(System.IO.Path.GetDirectoryName(User), "").Substring(1);
+                // string UserName = User.Replace(System.IO.Path.GetDirectoryName(User), "").Substring(1);
+                string UserName = System.IO.Path.GetFileName(User);
 
                 UserAccount.Items.Add(UserName);
                 if (USERNAME == UserName) UserAccount.SelectedItem = UserName;
             };
+
+            UserAccount.SelectionChanged += UserAccount_SelectionChanged;
         }
-        public async void OpenDiscord(object sender, RoutedEventArgs e)
+
+        private void UserAccount_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            await Windows.System.Launcher.LaunchUriAsync(new Uri("http://fakeurl.tld"));
+            foreach (DiscordReleaseButton button in Releases)
+            {
+                button.Button.IsEnabled = GetDiscordRelease(button.Release) is not null;
+                button.Button.IsChecked = false;
+            }
         }
-        public async void OpenGithub(object sender, RoutedEventArgs e)
+
+        // Due to the setting that allows changing of the user
+        // This will get the respective user
+        private string GetApplicationData(bool LocalAppData = false)
         {
-            await Windows.System.Launcher.LaunchUriAsync(new Uri("http://fakeurl.tld"));
+            ComboBox UserAccount = (ComboBox)SettingPage.FindName("UserAccount");
+            // Not possible but
+            if (UserAccount is null || UserAccount.SelectedItem is null) return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+            string SystemDrive = Environment.GetEnvironmentVariable("SystemDrive")!;
+
+            string AppDataType = LocalAppData ? "Local" : "Roaming";
+
+            
+
+            return System.IO.Path.Combine(SystemDrive, "Users", UserAccount.SelectedItem.ToString(), "AppData", AppDataType);
         }
 
         private AppWindow GetAppWindowForCurrentWindow()
@@ -444,6 +299,8 @@ namespace VXInstaller
             return AppWindow.GetFromWindowId(wndId);
         }
 
+        // Customize the Titlebar
+        // DLL's to remove the Minimize and Maxime button
         [DllImport("user32.dll", SetLastError = true, EntryPoint = "GetWindowLongPtr")]
         private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
 
@@ -495,5 +352,162 @@ namespace VXInstaller
             AppTitleBarRow.Height = new GridLength(Titlebar.Height);
         }
         public string WinAppSdkRuntimeDetails => $"WinUI 3";
+
+        // Discord
+        private static readonly Regex AppRegex = new(@"^app-\d+\.\d+.\d+$");
+
+        public enum Release
+        {
+            STABLE,
+            PTB,
+            CANARY
+        }
+        public static ReleaseStruct GetDiscordRelease(Release release)
+        {
+
+            string LocalAppData = CurrentWindow.GetApplicationData(true);
+            // Should not be possible but you never know
+            if (string.IsNullOrEmpty(LocalAppData))
+            {
+                return null;
+            }
+
+            string DiscordFolderName;
+            switch (release)
+            {
+                case Release.STABLE:
+                    DiscordFolderName = "Discord";
+                    break;
+                case Release.PTB:
+                    DiscordFolderName = "DiscordPTB";
+                    break;
+                case Release.CANARY:
+                    DiscordFolderName = "DiscordCanary";
+                    break;
+
+                default:
+                    return null;
+            }
+
+            string DiscordBasePath = System.IO.Path.Combine(LocalAppData, DiscordFolderName);
+
+            try
+            {
+                if (!Directory.Exists(DiscordBasePath)) return null;
+            }
+            catch
+            {
+                return null;
+            }
+
+            string AppFolder = null;
+
+            string[] Directories = Directory.GetDirectories(DiscordBasePath);
+            foreach (string DirectoryPath in Directories)
+            {
+                string DirectoryName = DirectoryPath.Replace(DiscordBasePath, "").Substring(1);
+
+                if (AppRegex.Match(DirectoryName).Success)
+                {
+                    AppFolder = DirectoryPath;
+                }
+            }
+
+            if (string.IsNullOrEmpty(AppFolder))
+            {
+                return null;
+            }
+
+            ReleaseStruct releaseStruct = new()
+            {
+                Resources = System.IO.Path.Combine(AppFolder, "resources"),
+                Release = release
+            };
+
+            return releaseStruct;
+        }
+        public class ReleaseStruct
+        {
+            public string Resources { get; set; }
+            public Release Release { get; set; }
+        }
+        public class ReleasesStruct
+        {
+            public ReleaseStruct Stable { get; set; }
+            public ReleaseStruct PTB { get; set; }
+            public ReleaseStruct Canary { get; set; }
+        }
+
+        public class DiscordReleaseButton
+        {
+            public DiscordReleaseButton(Release release)
+            {
+                ReleaseStruct path = GetDiscordRelease(release);
+
+                Release = release;
+
+                Button = new()
+                {
+                    IsEnabled = path is not null,
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    VerticalAlignment = VerticalAlignment.Stretch,
+                    HorizontalContentAlignment = HorizontalAlignment.Left
+                };
+
+                Grid grid = new();
+
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Fixed width for the Image
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(8) });  // Small space between Image and TextBlock
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // TextBlock stretches in this column
+
+                grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+                int ImageSize = 60;
+
+                // Create the Image
+                Image = new()
+                {
+                    Source = new BitmapImage(new Uri("ms-appx:///Assets/Square44x44Logo.png")),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Width = ImageSize,
+                    Height = ImageSize
+                };
+                Grid.SetColumn(Image, 0);
+                Grid.SetRow(Image, 0);
+
+                // Create the TextBlock
+                TextBlock = new()
+                {
+                    Text = ReleaseText,
+                    Style = (Style)Application.Current.Resources["SubtitleTextBlockStyle"],
+                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    TextWrapping = TextWrapping.Wrap
+                };
+                Grid.SetColumn(TextBlock, 2);
+                Grid.SetRow(TextBlock, 0);
+
+                // Add the Image and TextBlock to the Grid
+                grid.Children.Add(Image);
+                grid.Children.Add(TextBlock);
+
+                Button.Content = grid;
+            }
+
+            public readonly Release Release;
+            public readonly ToggleButton Button;
+            public readonly Image Image;
+            public readonly TextBlock TextBlock;
+
+            private string ReleaseText
+            {
+                get
+                {
+                    if (Release is Release.PTB) return "Public Test Branch";
+                    if (Release is Release.CANARY) return "Canary";
+                    return "Stable";
+                }
+            }
+        }
     }
 }
