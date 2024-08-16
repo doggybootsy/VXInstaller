@@ -256,6 +256,22 @@ namespace VXInstaller
                     CurrentPage = Page.RELEASES;
                     UserAccount.IsEnabled = true;
                     break;
+                case Page.INFO:
+
+                    StableReleaseButton.IsChecked = false;
+                    PTBReleaseButton.IsChecked = false;
+                    CanaryReleaseButton.IsChecked = false;
+
+                    VisualStateManager.GoToState(PageContainerControl, "ReleasePageState", true);
+
+                    BackButton.Content = "Back";
+                    NextButton.Content = "Next";
+
+                    CurrentPage = Page.RELEASES;
+                    UserAccount.IsEnabled = true;
+
+                    InfoLog.Children.Clear();
+                    break;
             }
         }
         private void CheckNextButtonState()
@@ -263,11 +279,7 @@ namespace VXInstaller
             switch (CurrentPage)
             {
                 case Page.RELEASES:
-                    if (StableReleaseButton.IsChecked is true) NextButton.IsEnabled = true;
-                    else if (PTBReleaseButton.IsChecked is true) NextButton.IsEnabled = true;
-                    else if (CanaryReleaseButton.IsChecked is true) NextButton.IsEnabled = true;
-                    else NextButton.IsEnabled = false;
-
+                    NextButton.IsEnabled = StableReleaseButton.IsChecked is true || PTBReleaseButton.IsChecked is true || CanaryReleaseButton.IsChecked is true;
                     break;
                 case Page.ACTION:
                     NextButton.IsEnabled = true;
@@ -714,6 +726,9 @@ require(`./${latest}.asar`);";
 
         private async void Install(ReleaseStruct release)
         {
+            BackButton.Content = "Restart";
+            NextButton.Content = "Exit";
+
             EnsureVXPath();
 
             await DownloadLatestAsar();
@@ -750,11 +765,14 @@ require(`./${latest}.asar`);";
             AddLog("VX is injected");
             if (wasDiscordOpen) OpenDiscord(release);
 
+            BackButton.IsEnabled = true;
             NextButton.IsEnabled = true;
-            NextButton.Content = "Exit";
         }
         private async void Uninstall(ReleaseStruct release)
         {
+            BackButton.Content = "Restart";
+            NextButton.Content = "Exit";
+
             bool wasDiscordOpen = await CloseDiscord(release);
 
             string originalAppAsar = Path.Combine(release.Resources, "vx.app.asar");
@@ -774,8 +792,8 @@ require(`./${latest}.asar`);";
             AddLog("VX is uninjected");
             if (wasDiscordOpen) OpenDiscord(release);
 
+            BackButton.IsEnabled = true;
             NextButton.IsEnabled = true;
-            NextButton.Content = "Exit";
         }
     }
 }

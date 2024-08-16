@@ -55,6 +55,7 @@
                         <UserControl x:Name="PageContainerControl">
                             <Grid x:Name="PageContainer">
                                 <!-- Release Page -->
+                                <!-- Uses rows instead
                                 <Grid x:Name="ReleasePage">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -118,8 +119,8 @@
                                         </Grid>
                                     </ToggleButton>
                                 </Grid>
+                                -->
                                 
-                                <!-- Uses columns instead
                                 <Grid x:Name="ReleasePage">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -183,7 +184,6 @@
                                         </Grid>
                                     </ToggleButton>
                                 </Grid>
-                                -->
 
                                 <!-- ActionPage -->
                                 <Grid x:Name="ActionPage" Visibility="Collapsed">
