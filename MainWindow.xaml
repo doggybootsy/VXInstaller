@@ -4,54 +4,506 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:VXInstaller"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
 
-    <Window.SystemBackdrop>
-        <MicaBackdrop Kind="Base"/>
-    </Window.SystemBackdrop>
-
-    <!-- Root Grid for the entire window -->
     <Grid>
-        <!-- Define rows: one for the title bar and one for the main content -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
-            <!-- Height of the title bar -->
+            <RowDefinition x:Name="AppTitleBarRow" Height="0"/>
+            <RowDefinition x:Name="AppTitleBarSpacer" Height="8"/>
             <RowDefinition Height="*"/>
-            <!-- Fill remaining space -->
         </Grid.RowDefinitions>
 
-        <!-- Title Bar Background -->
-
         <Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent">
-            <!-- Width of the padding columns is set in LayoutMetricsChanged handler. -->
-            <!-- Using padding columns instead of Margin ensures that the background
-         paints the area under the caption control buttons (for transparent buttons). -->
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="LeftPaddingColumn" Width="0"/>
-                <ColumnDefinition/>
-                <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
             <Image 
-                Source="Assets/Square44x44Logo.png" 
+                Source="Assets/VXLogo.Dark.png" 
                 Grid.Column="1"
+                Grid.Row="1"
                 HorizontalAlignment="Left"
-                Width="16" Height="16"
-                Margin="8,0,0,0"/>
-            <TextBlock x:Name="AppTitleTextBlock"
-                Text="App title" 
-                Style="{StaticResource CaptionTextBlockStyle}" 
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                Margin="28,0,0,0"/>
+                Width="24" Height="24"
+                Margin="8,0,0,0"
+                x:Name="ApplicationIcon"
+                Visibility="Collapsed"/>
+        </Grid>
+
+        <Grid Grid.Row="2" x:Name="Loader">
+            <Image Source="Assets/VXLogo.Dark.png" Width="200" Height="200" x:Name="LoaderLogo"/>
         </Grid>
         
-        <!-- Main Content -->
-        <Grid Margin="0,0,0,0" Grid.Row="1">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-            </StackPanel>
-        </Grid>
+        <UserControl x:Name="SettingsContainerControl" Grid.Row="2" Visibility="Collapsed">
+            <Grid x:Name="SettingsControl">
+                <Grid x:Name="AppPage" Padding="8,0,8,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="8"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Main Content -->
+                    <Grid Grid.Row="0">
+                        <UserControl x:Name="PageContainerControl">
+                            <Grid x:Name="PageContainer">
+                                <!-- Release Page -->
+
+                                <!-- Uses rows instead-->
+                                <Grid x:Name="ReleasePage">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="8"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="8"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <ToggleButton Grid.Row="0" x:Name="StableReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid Grid.Column="0">
+                                                <Grid Background="#596aef" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="Stable" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Row="2" x:Name="PTBReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid Grid.Column="0">
+                                                <Grid Background="#5868f4" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="Public Test Branch" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Row="4" x:Name="CanaryReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid Grid.Column="0">
+                                                <Grid Background="#f9b34b" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="Canary" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+                                </Grid>
+
+                                <!-- Uses columns instead
+                                <Grid x:Name="ReleasePage">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <ToggleButton Grid.Column="0" x:Name="StableReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Width="60">
+                                                <Grid Background="#596aef" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="Stable" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Column="2" x:Name="PTBReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Width="60">
+                                                <Grid Background="#5868f4" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="PTB" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Column="4" x:Name="CanaryReleaseButton" Click="ClickCheckNavigationalButtonsState" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Width="60">
+                                                <Grid Background="#f9b34b" CornerRadius="30" />
+                                                <Image Source="Assets/DiscordLogo.svg" Margin="10,10,10,10" HorizontalAlignment="Left" Width="40" Height="40" />
+                                            </Grid>
+
+                                            <TextBlock Text="Canary" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+                                </Grid>
+                                -->
+
+                                <!-- ActionPage -->
+                                <Grid x:Name="ActionPage" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <ToggleButton 
+                                        HorizontalAlignment="Stretch" 
+                                        VerticalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Grid.Row="0" Grid.Column="0"
+                                        IsChecked="True"
+                                        x:Name="InstallButton">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <FontIcon 
+                                                Glyph="&#xEBD3;" 
+                                                Grid.Column="2" 
+                                                Grid.Row="0" 
+                                                FontSize="50"/>
+
+                                            <TextBlock 
+                                                Text="Install" 
+                                                Style="{StaticResource SubtitleTextBlockStyle}" 
+                                                Grid.Column="2" Grid.Row="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+                                    <ToggleButton 
+                                        HorizontalAlignment="Stretch" 
+                                        VerticalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Grid.Row="0" Grid.Column="2"
+                                        x:Name="UninstallButton">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <FontIcon 
+                                                Glyph="&#xE74D;" 
+                                                Grid.Column="2" 
+                                                Grid.Row="0" 
+                                                FontSize="50"/>
+
+                                            <TextBlock 
+                                                Text="Uninstall" 
+                                                Style="{StaticResource SubtitleTextBlockStyle}" 
+                                                Grid.Column="2" Grid.Row="2"/>
+                                        </Grid>
+                                    </ToggleButton>
+                                </Grid>
+
+                                <!-- ReleasePage -->
+                                <Grid x:Name="InfoPage" Visibility="Collapsed">
+                                    <ScrollView>
+                                        <StackPanel Orientation="Vertical" Spacing="8" x:Name="InfoLog">
+
+                                        </StackPanel>
+                                    </ScrollView>
+                                </Grid>
+
+                                <!-- Define Visual States -->
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup>
+                                        <!-- ReleasePage State -->
+                                        <VisualState x:Name="ReleasePageState">
+                                            <Storyboard>
+                                                <!-- Fade in ReleasePage -->
+                                                <DoubleAnimation Storyboard.TargetName="ReleasePage"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="0" To="1" Duration="0:0:0.2" />
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ReleasePage" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Visible" />
+                                                </ObjectAnimationUsingKeyFrames>
+
+                                                <!-- Fade out ActionPage -->
+                                                <DoubleAnimation 
+                                                    Storyboard.TargetName="ActionPage"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="1" To="0" Duration="0:0:0.2" />
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ActionPage" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0.2" Value="Collapsed" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+
+                                        <!-- ActionPage State -->
+                                        <VisualState x:Name="ActionPageState">
+                                            <Storyboard>
+                                                <!-- Fade in ActionPage -->
+                                                <DoubleAnimation 
+                                                    Storyboard.TargetName="ActionPage"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="0" To="1" Duration="0:0:0.2" />
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ActionPage" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Visible" />
+                                                </ObjectAnimationUsingKeyFrames>
+
+                                                <!-- Fade out ReleasePage -->
+                                                <DoubleAnimation 
+                                                    Storyboard.TargetName="ReleasePage"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="1" To="0" Duration="0:0:0.2" />
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ReleasePage" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0.2" Value="Collapsed" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+
+                                        <!-- ActionPage State -->
+                                        <VisualState x:Name="InfoPageState">
+                                            <Storyboard>
+                                                <!-- Fade in ActionPage -->
+                                                <DoubleAnimation 
+                                                    Storyboard.TargetName="InfoPage"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="0" To="1" Duration="0:0:0.2" />
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="InfoPage" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Visible" />
+                                                </ObjectAnimationUsingKeyFrames>
+
+                                                <!-- Fade out ReleasePage -->
+                                                <DoubleAnimation 
+                                                    Storyboard.TargetName="ActionPage"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="1" To="0" Duration="0:0:0.2" />
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ActionPage" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0.2" Value="Collapsed" />
+                                                </ObjectAnimationUsingKeyFrames>
+
+                                                <!-- Fade out ReleasePage -->
+                                                <DoubleAnimation 
+                                                    Storyboard.TargetName="ReleasePage"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="1" To="0" Duration="0:0:0.2" />
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ReleasePage" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0.2" Value="Collapsed" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </UserControl>
+                    </Grid>
+
+                    <!-- Nav Bar -->
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="4"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="4"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Button Grid.Column="0" x:Name="SettingButton" Click="OpenSettings">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Padding="{TemplateBinding Padding}"/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+
+                            <FontIcon Glyph="&#xE713;" />
+                        </Button>
+
+                        <Button Content="Back" IsEnabled="False" Grid.Column="6" x:Name="BackButton" />
+                        <Button Content="Next" IsEnabled="False" Grid.Column="8" Style="{StaticResource AccentButtonStyle}" x:Name="NextButton" />
+                    </Grid>
+                </Grid>
+
+                <Grid x:Name="SettingPage" Visibility="Collapsed">
+                    <ScrollView>
+                        <StackPanel Spacing="4" Margin="24,0,24,12">
+                            <controls:SettingsCard Header="Close Settings">
+                                <controls:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xE713;" />
+                                </controls:SettingsCard.HeaderIcon>
+
+                                <Button Click="CloseSettings" Content="Close" />
+                            </controls:SettingsCard>
+
+                            <TextBlock Margin="1,30,0,6" Text="Settings" />
+
+                            <controls:SettingsCard Description="Select which user to install to" Header="User">
+                                <controls:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xE748;" />
+                                </controls:SettingsCard.HeaderIcon>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <ComboBox x:Name="UserAccount" AutomationProperties.AutomationId="UserComboBox" Grid.Column="0" />
+                                    <Button Click="UserAccountReset" Grid.Column="2">
+                                        <FontIcon Glyph="&#xE72C;" />
+                                    </Button>
+                                </Grid>
+                            </controls:SettingsCard>
+
+                            <TextBlock Margin="1,30,0,6" Text="About" />
+
+                            <controls:SettingsExpander 
+                                Description="© 2024. All rights reserved."
+                                Header="VX Installer"
+                                HeaderIcon="{ui:BitmapIcon Source=ms-appx:///Assets/VXLogo.Dark.png}"
+                                x:Name="AboutSection">
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="1.0.0" />
+                                <controls:SettingsExpander.Items>
+                                    <controls:SettingsCard Header="File a bug or issue" IsClickEnabled="True" Click="CreateIssue">
+                                        <controls:SettingsCard.ActionIcon>
+                                            <FontIcon Glyph="&#xE8A7;" />
+                                        </controls:SettingsCard.ActionIcon>
+                                    </controls:SettingsCard>
+
+                                    <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical" Header="Dependencies">
+                                        <StackPanel Margin="-12,0,0,0" Orientation="Vertical">
+                                            <HyperlinkButton Content="{x:Bind WinAppSdkRuntimeDetails}" NavigateUri="https://aka.ms/windowsappsdk" />
+                                            <HyperlinkButton Content="Windows UI Library" NavigateUri="https://aka.ms/winui" />
+                                            <HyperlinkButton Content="Windows Community Toolkit" NavigateUri="https://aka.ms/toolkit/windows" />
+                                        </StackPanel>
+                                    </controls:SettingsCard>
+                                </controls:SettingsExpander.Items>
+                            </controls:SettingsExpander>
+                        </StackPanel>
+                    </ScrollView>
+                </Grid>
+
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup>
+                        <!-- AppPage State -->
+                        <VisualState x:Name="MainApp">
+                            <Storyboard>
+                                <!-- Fade in AppPage -->
+                                <DoubleAnimation Storyboard.TargetName="AppPage"
+                                        Storyboard.TargetProperty="Opacity"
+                                        From="0" To="1" Duration="0:0:0.2" />
+                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AppPage" Storyboard.TargetProperty="Visibility">
+                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Visible" />
+                                </ObjectAnimationUsingKeyFrames>
+
+                                <!-- Fade out SettingPage -->
+                                <DoubleAnimation 
+                                        Storyboard.TargetName="SettingPage"
+                                        Storyboard.TargetProperty="Opacity"
+                                        From="1" To="0" Duration="0:0:0.2" />
+                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SettingPage" Storyboard.TargetProperty="Visibility">
+                                    <DiscreteObjectKeyFrame KeyTime="0:0:0.2" Value="Collapsed" />
+                                </ObjectAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </VisualState>
+
+                        <!-- Settings State -->
+                        <VisualState x:Name="Settings">
+                            <Storyboard>
+                                <!-- Fade in Settings -->
+                                <DoubleAnimation 
+                                        Storyboard.TargetName="SettingPage"
+                                        Storyboard.TargetProperty="Opacity"
+                                        From="0" To="1" Duration="0:0:0.2" />
+                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SettingPage" Storyboard.TargetProperty="Visibility">
+                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Visible" />
+                                </ObjectAnimationUsingKeyFrames>
+
+                                <!-- Fade out AppPage -->
+                                <DoubleAnimation 
+                                        Storyboard.TargetName="AppPage"
+                                        Storyboard.TargetProperty="Opacity"
+                                        From="1" To="0" Duration="0:0:0.2" />
+                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="AppPage" Storyboard.TargetProperty="Visibility">
+                                    <DiscreteObjectKeyFrame KeyTime="0:0:0.2" Value="Collapsed" />
+                                </ObjectAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+            </Grid>
+        </UserControl>
     </Grid>
 </Window>
