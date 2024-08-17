@@ -1,33 +1,17 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using WinRT.Interop;
 using Microsoft.UI.Windowing;
-using Windows.UI.ViewManagement;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Core;
 using WinRT;
 using System.Text.RegularExpressions;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Windows.Devices.Input;
-using CommunityToolkit.WinUI;
-using CommunityToolkit.WinUI.Controls;
-using Microsoft.UI.Xaml.Automation;
-using Windows.UI.ApplicationSettings;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Net.Http;
@@ -194,10 +178,6 @@ namespace VXInstaller
             SetupLogoTheming();
             SetupLoader();
         }
-        private void ReleaseButtonClick(object s, RoutedEvent e)
-        {
-            CheckNavigationalButtonsState();
-        }
         private enum Page
         {
             RELEASES, ACTION, INFO
@@ -265,18 +245,12 @@ namespace VXInstaller
         }
         private void CheckNextButtonState()
         {
-            switch (CurrentPage)
-            {
-                case Page.RELEASES:
-                    NextButton.IsEnabled = StableReleaseButton.IsChecked is true || PTBReleaseButton.IsChecked is true || CanaryReleaseButton.IsChecked is true;
-                    break;
-                case Page.ACTION:
-                    NextButton.IsEnabled = true;
-                    break;
-                default:
-                    NextButton.IsEnabled = false;
-                    break;
-            }
+    NextButton.IsEnabled = CurrentPage switch
+    {
+        Page.RELEASES => StableReleaseButton.IsChecked is true || PTBReleaseButton.IsChecked is true || CanaryReleaseButton.IsChecked is true,
+        Page.ACTION => true,
+        _ => false
+    };
         }
         private void CheckBackButtonState()
         {
@@ -593,7 +567,7 @@ namespace VXInstaller
             string[] Directories = Directory.GetDirectories(DiscordBasePath);
             foreach (string DirectoryPath in Directories)
             {
-                string DirectoryName = DirectoryPath.Replace(DiscordBasePath, "").Substring(1);
+                string DirectoryName = Path.GetFileName(DirectoryPath);
 
                 if (AppRegex().Match(DirectoryName).Success)
                 {
@@ -720,7 +694,7 @@ for (const version of old) {
 
 require(`./${latest}.asar`);";
 
-        private string REPO_API_URL = "https://api.github.com/repos/doggybootsy/vx/releases/latest";
+        private readonly string REPO_API_URL = "https://api.github.com/repos/doggybootsy/vx/releases/latest";
 
         private async Task<bool> DownloadLatestAsar()
         {
@@ -740,10 +714,7 @@ require(`./${latest}.asar`);";
             Github.Release release = await response.Content.ReadFromJsonAsync<Github.Release>();
 
             string version = release.tag_name;
-            if (version.StartsWith("v"))
-            {
-                version = version.Substring(1);
-            }
+            if (version.StartsWith('v')) version = version[1..];
 
             AddLog($"Latest version is v{version}");
 
@@ -835,7 +806,7 @@ require(`./${latest}.asar`);";
 
             Directory.CreateDirectory(appDirectory);
 
-            // Allow $VX_REQUIRE to be set so you can have a local version
+            // Allow VX_INJECTION_PATH to be set so you can have a local version
             // For vx development
             // If its empty / null use %APPDATA%\.vx\app
             string app = Environment.GetEnvironmentVariable("VX_INJECTION_PATH");
