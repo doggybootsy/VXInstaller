@@ -20,27 +20,30 @@
         <Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="LeftPaddingColumn" Width="0"/>
-                <ColumnDefinition/>
-                <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
             <Image 
-                Source="Assets/Square44x44Logo.png" 
+                Source="Assets/VXLogo.Dark.png" 
                 Grid.Column="1"
+                Grid.Row="1"
                 HorizontalAlignment="Left"
-                Width="16" Height="16"
-                Margin="8,0,0,0"/>
-
-            <TextBlock 
-                x:Name="AppTitleTextBlock"
-                Text="App title" 
-                Style="{StaticResource CaptionTextBlockStyle}" 
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                Margin="28,0,0,0"/>
+                Width="24" Height="24"
+                Margin="8,0,0,0"
+                x:Name="ApplicationIcon"
+                Visibility="Collapsed"/>
         </Grid>
 
-        <UserControl x:Name="SettingsContainerControl" Grid.Row="2">
+        <Grid Grid.Row="2" x:Name="Loader">
+            <Image Source="Assets/VXLogo.Dark.png" Width="200" Height="200" x:Name="LoaderLogo"/>
+        </Grid>
+        
+        <UserControl x:Name="SettingsContainerControl" Grid.Row="2" Visibility="Collapsed">
             <Grid x:Name="SettingsControl">
                 <Grid x:Name="AppPage" Padding="8,0,8,0">
                     <Grid.RowDefinitions>
@@ -55,7 +58,7 @@
                         <UserControl x:Name="PageContainerControl">
                             <Grid x:Name="PageContainer">
                                 <!-- Release Page -->
-                                
+
                                 <!-- Uses rows instead-->
                                 <Grid x:Name="ReleasePage">
                                     <Grid.ColumnDefinitions>
@@ -264,7 +267,7 @@
                                 <Grid x:Name="InfoPage" Visibility="Collapsed">
                                     <ScrollView>
                                         <StackPanel Orientation="Vertical" Spacing="8" x:Name="InfoLog">
-                                            
+
                                         </StackPanel>
                                     </ScrollView>
                                 </Grid>
@@ -386,7 +389,7 @@
 
                             <FontIcon Glyph="&#xE713;" />
                         </Button>
-                        
+
                         <Button Content="Back" IsEnabled="False" Grid.Column="6" x:Name="BackButton" />
                         <Button Content="Next" IsEnabled="False" Grid.Column="8" Style="{StaticResource AccentButtonStyle}" x:Name="NextButton" />
                     </Grid>
@@ -402,7 +405,7 @@
 
                                 <Button Click="CloseSettings" Content="Close" />
                             </controls:SettingsCard>
-                            
+
                             <TextBlock Margin="1,30,0,6" Text="Settings" />
 
                             <controls:SettingsCard Description="Select which user to install to" Header="User">
@@ -410,7 +413,18 @@
                                     <FontIcon Glyph="&#xE748;" />
                                 </controls:SettingsCard.HeaderIcon>
 
-                                <ComboBox x:Name="UserAccount" AutomationProperties.AutomationId="UserComboBox" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <ComboBox x:Name="UserAccount" AutomationProperties.AutomationId="UserComboBox" Grid.Column="0" />
+                                    <Button Click="UserAccountReset" Grid.Column="2">
+                                        <FontIcon Glyph="&#xE72C;" />
+                                    </Button>
+                                </Grid>
                             </controls:SettingsCard>
 
                             <TextBlock Margin="1,30,0,6" Text="About" />
@@ -418,8 +432,8 @@
                             <controls:SettingsExpander 
                                 Description="© 2024. All rights reserved."
                                 Header="VX Installer"
-                                HeaderIcon="{ui:BitmapIcon Source=ms-appx:///Assets/Square44x44Logo.png}"
-                                x:Name="AboutSecction">
+                                HeaderIcon="{ui:BitmapIcon Source=ms-appx:///Assets/VXLogo.Dark.png}"
+                                x:Name="AboutSection">
                                 <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="1.0.0" />
                                 <controls:SettingsExpander.Items>
                                     <controls:SettingsCard Header="File a bug or issue" IsClickEnabled="True" Click="CreateIssue">

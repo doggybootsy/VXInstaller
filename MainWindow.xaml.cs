@@ -32,7 +32,6 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
-using ABI.System;
 
 namespace Github
 {
@@ -185,25 +184,15 @@ namespace VXInstaller
             SetUpActionButtons();
             HandleUserSetting();
 
-            AppTitle = "VX Installer";
+            Title = "VX Installer";
 
 
             StableReleaseButton.IsEnabled = GetDiscordRelease(Release.STABLE) is not null;
             PTBReleaseButton.IsEnabled = GetDiscordRelease(Release.PTB) is not null;
             CanaryReleaseButton.IsEnabled = GetDiscordRelease(Release.CANARY) is not null;
-        }
 
-        public string AppTitle
-        {
-            get
-            {
-                return Title;
-            }
-            set
-            {
-                AppTitleTextBlock.Text = value;
-                Title = value;
-            }
+            SetupLogoTheming();
+            SetupLoader();
         }
         private void ReleaseButtonClick(object s, RoutedEvent e)
         {
@@ -368,6 +357,12 @@ namespace VXInstaller
 
             UserAccount.SelectionChanged += UserAccount_SelectionChanged;
         }
+        private void UserAccountReset(object sender, RoutedEventArgs e)
+        {
+            string USERNAME = Environment.GetEnvironmentVariable("USERNAME")!;
+
+            UserAccount.SelectedItem = USERNAME;
+        }
 
         private void UserAccount_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -392,6 +387,41 @@ namespace VXInstaller
             string AppDataType = LocalAppData ? "Local" : "Roaming";
 
             return Path.Combine(SystemDrive, "Users", UserAccount.SelectedItem.ToString(), "AppData", AppDataType);
+        }
+        private void SetupLogoTheming()
+        {
+            Content.As<FrameworkElement>()!.ActualThemeChanged += (s, e) =>
+            {
+                SetLogoTheme();
+            };
+            SetLogoTheme();
+        }
+        private void SetLogoTheme()
+        {
+            FrameworkElement content = Content.As<FrameworkElement>()!;
+            ElementTheme value = content.ActualTheme;
+
+            string type = "Dark";
+            if (value == ElementTheme.Light) type = "Light";
+
+            string source = $"ms-appx:///Assets/VXLogo.{type}.png";
+            Uri uri = new(source);
+
+            AboutSection.HeaderIcon = new BitmapIcon()
+            {
+                UriSource = uri
+            };
+
+            ApplicationIcon.Source = new BitmapImage(uri);
+            LoaderLogo.Source = new BitmapImage(uri);
+        }
+        private async void SetupLoader()
+        {
+            await Task.Delay(1000);
+
+            Loader.Visibility = Visibility.Collapsed;
+            SettingsContainerControl.Visibility = Visibility.Visible;
+            ApplicationIcon.Visibility = Visibility.Visible;
         }
 
         private AppWindow GetAppWindowForCurrentWindow()
@@ -442,17 +472,66 @@ namespace VXInstaller
 
             if (!AppWindowTitleBar.IsCustomizationSupported()) return;
 
-            AppWindowTitleBar Titlebar = GetAppWindowForCurrentWindow().TitleBar;
+            AppWindowTitleBar titleBar = GetAppWindowForCurrentWindow().TitleBar;
 
             // Extend content into the title bar
             ExtendsContentIntoTitleBar = true;
-            Titlebar.ButtonBackgroundColor = Colors.Transparent;
-            Titlebar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            titleBar.ButtonBackgroundColor = Colors.Transparent;
+            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
 
             SetTitleBar(AppTitleBar);
 
-            AppTitleBarRow.Height = new GridLength(Titlebar.Height);
+            AppTitleBarRow.Height = new GridLength(titleBar.Height);
+
+            var content = (Content as FrameworkElement)!;
+            content.ActualThemeChanged += (s, e) =>
+            {
+                ModifyTitlebarTheme();
+            };
+            ModifyTitlebarTheme();
         }
+        private void ModifyTitlebarTheme()
+        {
+            FrameworkElement content = Content.As<FrameworkElement>()!;
+            ElementTheme value = content.ActualTheme;
+
+            AppWindowTitleBar titleBar = AppWindow.TitleBar;
+            if (value == ElementTheme.Light)
+            {
+                titleBar.ForegroundColor = Colors.Black;
+                titleBar.BackgroundColor = Colors.White;
+                titleBar.InactiveForegroundColor = Colors.Gray;
+                titleBar.InactiveBackgroundColor = Colors.White;
+
+                titleBar.ButtonForegroundColor = Colors.Black;
+                titleBar.ButtonInactiveForegroundColor = Colors.Gray;
+
+                titleBar.ButtonHoverForegroundColor = Colors.Black;
+                titleBar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(255, 245, 245, 245);
+                titleBar.ButtonPressedForegroundColor = Colors.Black;
+                titleBar.ButtonPressedBackgroundColor = Colors.White;
+            }
+            else if (value == ElementTheme.Dark)
+            {
+                titleBar.ForegroundColor = Colors.White;
+                titleBar.BackgroundColor = Windows.UI.Color.FromArgb(255, 31, 31, 31);
+                titleBar.InactiveForegroundColor = Colors.Gray;
+                titleBar.InactiveBackgroundColor = Windows.UI.Color.FromArgb(255, 31, 31, 31);
+
+                titleBar.ButtonForegroundColor = Colors.White;
+                titleBar.ButtonInactiveForegroundColor = Colors.Gray;
+
+                titleBar.ButtonHoverForegroundColor = Colors.White;
+                titleBar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(255, 51, 51, 51);
+                titleBar.ButtonPressedForegroundColor = Colors.White;
+                titleBar.ButtonPressedBackgroundColor = Colors.Gray;
+            }
+
+            // Fixed bug where icon background color was not applied 
+            titleBar.IconShowOptions = IconShowOptions.HideIconAndSystemMenu;
+            titleBar.IconShowOptions = IconShowOptions.ShowIconAndSystemMenu;
+        }
+
         // Setting stuff
         // TODO: Show Win App SDK Stuff
         public string WinAppSdkRuntimeDetails => $"Windows App SDK";
