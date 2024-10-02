@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
+using Windows.UI.Core;
 
 namespace Github
 {
@@ -170,7 +171,6 @@ namespace VXInstaller
 
             Title = "VX Installer";
 
-
             StableReleaseButton.IsEnabled = GetDiscordRelease(Release.STABLE) is not null;
             PTBReleaseButton.IsEnabled = GetDiscordRelease(Release.PTB) is not null;
             CanaryReleaseButton.IsEnabled = GetDiscordRelease(Release.CANARY) is not null;
@@ -245,12 +245,12 @@ namespace VXInstaller
         }
         private void CheckNextButtonState()
         {
-    NextButton.IsEnabled = CurrentPage switch
-    {
-        Page.RELEASES => StableReleaseButton.IsChecked is true || PTBReleaseButton.IsChecked is true || CanaryReleaseButton.IsChecked is true,
-        Page.ACTION => true,
-        _ => false
-    };
+            NextButton.IsEnabled = CurrentPage switch
+            {
+                Page.RELEASES => StableReleaseButton.IsChecked is true || PTBReleaseButton.IsChecked is true || CanaryReleaseButton.IsChecked is true,
+                Page.ACTION => true,
+                _ => false
+            };
         }
         private void CheckBackButtonState()
         {
@@ -387,15 +387,38 @@ namespace VXInstaller
             };
 
             ApplicationIcon.Source = new BitmapImage(uri);
-            LoaderLogo.Source = new BitmapImage(uri);
         }
-        private async void SetupLoader()
+
+        private Stopwatch _stopwatch = new();
+        private TimeSpan _lastRenderTime = new();
+
+        private async Task SetupLoader()
         {
-            await Task.Delay(1000);
+            // Start the stopwatch
+            _stopwatch.Start();
+
+            CompositionTarget.Rendering += OnRender;
+
+            await Task.Delay(2_000);
+
+            CompositionTarget.Rendering -= OnRender;
+            _stopwatch.Stop();
 
             Loader.Visibility = Visibility.Collapsed;
             SettingsContainerControl.Visibility = Visibility.Visible;
             ApplicationIcon.Visibility = Visibility.Visible;
+        }
+
+        private void OnRender(object sender, object e)
+        {
+            TimeSpan currentTime = _stopwatch.Elapsed;
+            TimeSpan deltaTime = currentTime - _lastRenderTime;
+
+            // Update the last render time
+            _lastRenderTime = currentTime;
+
+            // Update the StrokeDashOffset based on deltaTime
+            AnimatedPath.StrokeDashOffset += (float)deltaTime.TotalMilliseconds / 10; // Use TotalMilliseconds
         }
 
         private AppWindow GetAppWindowForCurrentWindow()

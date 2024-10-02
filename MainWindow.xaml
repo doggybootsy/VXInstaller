@@ -40,7 +40,17 @@
         </Grid>
 
         <Grid Grid.Row="2" x:Name="Loader">
-            <Image Source="Assets/VXLogo.Dark.png" Width="200" Height="200" x:Name="LoaderLogo"/>
+            <Path
+                x:Name="AnimatedPath"
+                Stroke="{StaticResource AccentAAFillColorDefaultBrush}"
+                StrokeThickness="5"
+                Fill="Transparent"
+                Data="M167 154H105.1L0 0H62.425L136.1 108.5 154.825 81 100.1 0h62.425l23.55 34.5L209.875 0H272.1L217.6 80l49.5 74H205.2l-19.15-27.5L167.375 154Z"
+                StrokeDashArray="25, 25"
+                StrokeDashOffset="0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+            />
         </Grid>
         
         <UserControl x:Name="SettingsContainerControl" Grid.Row="2" Visibility="Collapsed">
